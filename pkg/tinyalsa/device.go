@@ -1,6 +1,7 @@
 package tinyalsa
 
 import (
+	"fmt"
 	"github.com/Binozo/GoTinyAlsa/internal/tinyapi"
 	"github.com/Binozo/GoTinyAlsa/internal/tinypcm"
 	"github.com/Binozo/GoTinyAlsa/pkg/pcm"
@@ -73,4 +74,13 @@ func (d *AlsaDevice) WaitUntilReady(format int, timeout time.Duration) error {
 	}
 	defer pcmDevice.Close()
 	return pcmDevice.WaitUntilReady(timeout)
+}
+
+// GetLocation returns the device's linux /dev location (e.g. /dev/snd/pcmC0D0p)
+func (d *AlsaDevice) GetLocation(format int) string {
+	audioType := "c" // capture
+	if format == PCM_OUT {
+		audioType = "p"
+	}
+	return fmt.Sprintf("/dev/snd/pcmC%dD%d%s", d.Card, d.Device, audioType)
 }
