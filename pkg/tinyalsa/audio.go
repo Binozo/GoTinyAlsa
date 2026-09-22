@@ -22,7 +22,8 @@ const PCM_FORMAT_S32_LE = tinyapi.PCM_FORMAT_S32_LE
 const PCM_FORMAT_S32_BE = tinyapi.PCM_FORMAT_S32_BE
 const ErrorTolerance = 10 // defines how many error frames are allowed to be read without stopping reading the next ones
 
-// GetAudioStream Listens to the input of the defined device
+// GetAudioStream listens to the input of the defined device.
+// Each delivered slice owns its samples and may be retained by the receiver.
 func (d *AlsaDevice) GetAudioStream(config pcm.Config, audioData chan []byte) error {
 	pcmDevice, err := tinyapi.PcmOpen(d.Card, d.Device, PCM_IN, config)
 	if err != nil {
@@ -60,7 +61,8 @@ FrameReader:
 			continue
 		}
 		select {
-		case audioData <- buffer:
+		// Snapshot before sending: the next PCM read reuses buffer.
+		case audioData <- bytes.Clone(buffer):
 			// Successfully sent audio data back to the api
 			continue
 		case <-time.After(writeTimeout):
